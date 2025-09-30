@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Astyyyy's Private message system</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -64,9 +65,320 @@
     .tab-button.active { border-bottom-color: #3b82f6; color: #3b82f6; }
     body.dark .tab-button.active { color: #60a5fa; border-bottom-color: #60a5fa; }
     .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); display: none; z-index: 1000; }
-    .login-card {
-      width: 400px;
-      margin: 50px auto;
+    .admin-panel { display: none; }
+    #fixedMessageDisplay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(52, 211, 164, 0.8); /* Tailwind's teal-400 with opacity */
+      color: white;
+      padding: 10px;
+      text-align: center;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body class="light">
+  <div class="navbar">
+    <div class="container">
+      <div class="flex justify-between items-center py-4">
+        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Chat privado </h1>
+        <button id="themeToggle" class="flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 to-gray-600 text-gray-800 dark:text-gray-200 hover:scale-105 transition">
+            <i class="fas fa-sun mr-2"></i> <!-- Sun icon -->
+            <span id="themeIcon">Esc-md</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="fixedMessageDisplay" style="display:none;"></div>
+
+  <div class="container">
+    <nav class="tab-selector">
+      <button class="tab-button active" aria-controls="sendSection">Enviar</button>
+      <button class="tab-button" aria-controls="adminSection">Admin</button>
+      <button class="tab-button" aria-controls="viewSection">Visualizar</button>
+      <button class="tab-button" aria-controls="consoleSection">Console</button>
+      <button class="tab-button" aria-controls="adminPanelSection">Admin Panel</button>
+    </nav>
+
+    <div class="hero">
+      <h2 class="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 to-pink-500">🔐</h2>
+      <p class="text-xl opacity-90">Feito por astyyy, uptade log em breve.</p>
+    </div>
+
+    <!-- Seções -->
+    <div id="sendSection" class="card p-8 mb-8">
+      <h3 class="text-3xl font-semibold mb-6">Enviar Mensagem</h3>
+      <textarea id="messageInput" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800"></textarea>
+      <button id="sendButton" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-full">Enviar Agora</button>
+    </div>
+
+    <div id="adminSection" class="card p-8 mb-8 hidden">
+      <h3 class="text-3xl font-semibold mb-6">Admin Tokens</h3>
+      <input type="password" id="adminPassword" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800" placeholder="Senha...">
+      <button id="generateTokenButton" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-full">Gerar Token</button>
+      <p id="newTokenDisplay" class="text-sm text-green-500 font-semibold mt-4 hidden"></p>
+    </div>
+
+    <div id="viewSection" class="card p-8 mb-8 hidden">
+      <h3 class="text-3xl font-semibold mb-6">Visualizar Tudo</h3>
+      <input type="text" id="tokenInput" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800" placeholder="Token...">
+      <button id="viewButton" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-3 rounded-full">Revelar Mensagens</button>
+      <div id="messageList" class="space-y-4 hidden"></div>
+      <p id="errorMessage" class="text-red-500 text-sm mt-4 hidden">❌ Token inválido ou expirado.</p>
+    </div>
+
+    <div id="consoleSection" class="card p-8 mb-8 hidden">
+      <h3 class="text-3xl font-semibold mb-6">Console Avançado</h3>
+      <input type="password" id="consolePassword" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800" placeholder="Senha console...">
+      <button id="accessConsole" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-full">Acessar</button>
+      <div id="consolePanel" class="hidden mt-8">
+        <textarea id="commandInput" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800" placeholder="Digite comando (HELP)" rows="3"></textarea>
+        <button id="runCommand" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-full">Executar</button>
+        <div class="console-output mt-6" id="consoleOutput">✅ Bem-vindo ao console. Digite HELP.</div>
+      </div>
+    </div>
+
+    <div id="adminPanelSection" class="card p-8 mb-8 hidden">
+        <h3 class="text-3xl font-semibold mb-6">Admin Panel</h3>
+        <input type="password" id="adminPanelPassword" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800" placeholder="Senha Admin Panel...">
+        <button id="accessAdminPanel" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-full">Acessar Admin Panel</button>
+
+        <div id="adminPanel" class="admin-panel mt-8">
+            <h4 class="text-2xl font-semibold mb-4">Enviar Mensagem como Admin</h4>
+            <input type="text" id="adminMessageAuthor" class="w-full p-3 border-2 rounded-xl mb-3 bg-white dark:bg-gray-800" placeholder="Nome (Astyyy ou Anônimo)">
+            <textarea id="adminMessageInput" class="w-full p-5 border-2 rounded-xl mb-6 bg-white dark:bg-gray-800" placeholder="Mensagem"></textarea>
+            <button id="sendAdminMessageButton" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-full">Enviar Mensagem Admin</button>
+        </div>
+    </div>
+
+    <div id="fixedMessagesCard" class="card p-8 mb-8 hidden">
+      <h4 class="text-2xl font-bold mb-6">💡 Mensagens Fixadas</h4>
+      <div id="fixedMessages" class="space-y-4"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // ========= Variáveis =========
+    let messages = JSON.parse(localStorage.getItem("messages")) || [];
+    let tokens = JSON.parse(localStorage.getItem("tokens")) || ["gymukZ"];
+    let fixedMessage = localStorage.getItem("fixedMessage") || null;
+    const ADMIN_PASS = "admin123";
+    const CONSOLE_PASS = "console123";
+    const ADMIN_PANEL_PASS = "teste123";
+    let isAdminPanelAccessed = false;
+
+    const COMMANDS = {
+      HELP: "Mostra esta ajuda",
+      LIST: "Lista todas as mensagens",
+      TOKENS: "Mostra tokens ativos",
+      CLEAR: "Limpa o console",
+      FIXED: "Mostra mensagens fixadas",
+      DEL: "Deleta mensagem por ID (DEL <id>)",
+      FIX: "Fixa mensagem (FIX <id>)",
+      UNFIX: "Desfixa mensagem (UNFIX <id>)",
+      ADDMSG: "Adiciona nova mensagem (ADDMSG <texto>)"
+    };
+
+    // ========= Tabs =========
+    document.querySelectorAll(".tab-button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
+        btn.classList.add("active");
+        document.getElementById(btn.getAttribute("aria-controls")).classList.remove("hidden");
+      });
+    });
+    document.getElementById("sendSection").classList.remove("hidden");
+
+    // ========= Tema =========
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+    const body = document.body;
+
+    themeToggle.addEventListener("click", () => {
+        if (body.classList.contains("light")) {
+            body.classList.remove("light");
+            body.classList.add("dark");
+            themeIcon.textContent = "Light Mode";
+             themeToggle.innerHTML = '<i class="fas fa-moon mr-2"></i> Dark Mode'; // Moon icon
+        } else {
+            body.classList.remove("dark");
+            body.classList.add("light");
+            themeIcon.textContent = "Esc-md";
+              themeToggle.innerHTML = '<i class="fas fa-sun mr-2"></i> Light Mode'; // Sun icon
+        }
+    });
+
+
+    // ========= Toast =========
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.style.display = "block";
+      setTimeout(() => (toast.style.display = "none"), 2500);
+    }
+
+    // ========= Enviar =========
+    document.getElementById("sendButton").addEventListener("click", () => {
+      const txt = document.getElementById("messageInput").value.trim();
+      if (!txt) return;
+      const id = "msg-" + Date.now();
+      messages.push({ id, text: txt, fixed: false });
+      localStorage.setItem("messages", JSON.stringify(messages));
+      document.getElementById("messageInput").value = "";
+      showToast("Mensagem enviada!");
+    });
+
+    // ========= Admin =========
+    document.getElementById("generateTokenButton").addEventListener("click", () => {
+      if (document.getElementById("adminPassword").value !== ADMIN_PASS) return alert("❌ Senha incorreta!");
+      const token = Math.random().toString(36).substring(2, 8);
+      tokens.push(token);
+      localStorage.setItem("tokens", JSON.stringify(tokens));
+      const el = document.getElementById("newTokenDisplay");
+      el.textContent = "Novo token: " + token;
+      el.classList.remove("hidden");
+      showToast("Token gerado!");
+    });
+
+    // ========= Visualizar =========
+    document.getElementById("viewButton").addEventListener("click", () => {
+      const token = document.getElementById("tokenInput").value;
+      if (!tokens.includes(token)) return document.getElementById("errorMessage").classList.remove("hidden");
+      document.getElementById("errorMessage").classList.add("hidden");
+      const list = document.getElementById("messageList");
+      list.innerHTML = "";
+      messages.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "message-item p-4 rounded-lg border bg-gray-50 dark:bg-gray-700";
+        div.textContent = `[${m.id}] ${m.text}` + (m.fixed ? " 📌" : "");
+        list.appendChild(div);
+      });
+      list.classList.remove("hidden");
+    });
+
+    // ========= Console =========
+    document.getElementById("accessConsole").addEventListener("click", () => {
+      if (document.getElementById("consolePassword").value !== CONSOLE_PASS) return alert("❌ Senha incorreta!");
+      document.getElementById("consolePanel").classList.remove("hidden");
+    });
+
+    document.getElementById("runCommand").addEventListener("click", runConsoleCommand);
+
+    function runConsoleCommand() {
+      const cmd = document.getElementById("commandInput").value.trim();
+      const output = document.getElementById("consoleOutput");
+      const [command, ...args] = cmd.split(" ");
+      const argText = args.join(" ");
+
+      switch (command.toUpperCase()) {
+        case "HELP":
+          output.innerHTML += "<br>📖 Comandos disponíveis:";
+          Object.entries(COMMANDS).forEach(([c, d]) => output.innerHTML += `<br>${c} → ${d}`);
+          break;
+        case "LIST":
+          output.innerHTML += messages.length ? "<br>" + messages.map(m => `[${m.id}] ${m.text}${m.fixed ? " 📌" : ""}`).join("<br>") : "<br>Sem mensagens.";
+          break;
+        case "TOKENS":
+          output.innerHTML += "<br>🔑 Tokens: " + tokens.join(", ");
+          break;
+        case "CLEAR":
+          output.innerHTML = "✅ Console limpo.";
+          break;
+        case "FIXED":
+          output.innerHTML += "<br>📌 Fixadas: " + messages.filter(m => m.fixed).map(m => `[${m.id}] ${m.text}`).join("<br>");
+          break;
+        case "DEL":
+          if (!args[0]) return output.innerHTML += "<br>⚠️ Use: DEL <id>";
+          messages = messages.filter(m => m.id !== args[0]);
+          localStorage.setItem("messages", JSON.stringify(messages));
+          output.innerHTML += "<br>🗑️ Deletado " + args[0];
+          break;
+        case "FIX":
+          const f = messages.find(m => m.id === args[0]);
+          if (f) { f.fixed = true; localStorage.setItem("messages", JSON.stringify(messages)); output.innerHTML += "<br>📌 Fixado " + args[0]; }
+          updateFixedMessageDisplay();
+          break;
+        case "UNFIX":
+          const u = messages.find(m => m.id === args[0]);
+          if (u) { u.fixed = false; localStorage.setItem("messages", JSON.stringify(messages)); output.innerHTML += "<br>📌 Desfixado " + args[0]; }
+          updateFixedMessageDisplay();
+          break;
+        case "ADDMSG":
+          if (!argText) return output.innerHTML += "<br>⚠️ Use: ADDMSG <texto>";
+          const id = "msg-" + Date.now();
+          messages.push({ id, text: argText, fixed: false });
+          localStorage.setItem("messages", JSON.stringify(messages));
+          output.innerHTML += "<br>✅ Mensagem adicionada " + id;
+          break;
+        default:
+          output.innerHTML += "<br>❓ Comando desconhecido. Use HELP.";
+      }
+    }
+
+    // ========= Autocompletar =========
+    const input = document.getElementById("commandInput");
+    input.addEventListener("keydown", e => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const value = input.value.trim().toUpperCase();
+        const match = Object.keys(COMMANDS).find(c => c.startsWith(value));
+        if (match) input.value = match + " ";
+      }
+    });
+
+    // ========= Admin Panel =========
+    document.getElementById("accessAdminPanel").addEventListener("click", () => {
+        if (document.getElementById("adminPanelPassword").value === ADMIN_PANEL_PASS) {
+            isAdminPanelAccessed = true;
+            document.getElementById("adminPanel").classList.remove("hidden");
+        } else {
+            alert("❌ Senha incorreta!");
+        }
+    });
+
+    document.getElementById("sendAdminMessageButton").addEventListener("click", () => {
+        if (!isAdminPanelAccessed) return alert("Acesso ao Admin Panel não foi concedido.");
+
+        const author = document.getElementById("adminMessageAuthor").value.trim() || "Anônimo";
+        const messageText = document.getElementById("adminMessageInput").value.trim();
+
+        if (!messageText) return;
+
+        const message = `${author}: ${messageText}`;
+
+        const fixedMessageDisplay = document.getElementById("fixedMessageDisplay");
+        fixedMessageDisplay.textContent = message;
+        fixedMessageDisplay.style.display = "block";
+
+        setTimeout(() => {
+            fixedMessageDisplay.style.display = "none";
+        }, 5000); // Show for 5 seconds
+    });
+
+    function updateFixedMessageDisplay() {
+        const fixedMessageDisplay = document.getElementById("fixedMessageDisplay");
+        const fixedMessage = messages.find(m => m.fixed);
+
+        if (fixedMessage) {
+            fixedMessageDisplay.textContent = fixedMessage.text;
+            fixedMessageDisplay.style.display = "block";
+        } else {
+            fixedMessageDisplay.style.display = "none";
+        }
+    }
+      // ========= Init =========
+    updateFixedMessageDisplay();
+
+
+  </script>
+</body>
+        </html>      margin: 50px auto;
       padding: 30px;
     }
     .banned-message {
